@@ -14,7 +14,7 @@ struct expand_type {
 };
 #endif
 
-template <typename _Callable, typename... _Args>
+template <typename Callable, typename... Args>
 class Timer {
     void loop()
     {
@@ -35,8 +35,8 @@ class Timer {
 
     const std::chrono::milliseconds tick;
 
-    std::function<_Callable> callable_function;
-    std::tuple<_Args...> callable_function_args;
+    std::function<Callable> callable_function;
+    std::tuple<Args...> callable_function_args;
 
     std::atomic_flag start_flag = ATOMIC_FLAG_INIT;
     std::atomic_flag stop_flag = ATOMIC_FLAG_INIT;
@@ -58,7 +58,7 @@ public:
         stop_flag.test_and_set(std::memory_order_acquire);
     }
 
-    explicit Timer(int new_tick, _Callable&& __f, _Args&&... __args)
+    explicit Timer(int new_tick, Callable&& __f, Args&&... __args)
         : callable_function(__f)
         , callable_function_args(__args...)
         , tick(new_tick)
