@@ -1,20 +1,20 @@
 #ifndef TIMER_H
 #define TIMER_H
 
-#include <thread>
-#include <functional>
 #include <atomic>
+#include <functional>
+#include <thread>
 
 #ifdef DEBUG
 #include <iostream>
 
 struct expand_type {
-    template<typename... T>
-    expand_type(T&&...) {}
+    template <typename... T>
+    expand_type(T&&...) { }
 };
 #endif
 
-template<typename _Callable, typename... _Args>
+template <typename _Callable, typename... _Args>
 class Timer {
     void loop()
     {
@@ -57,14 +57,13 @@ public:
     }
 
     explicit Timer(int new_tick, _Callable&& __f, _Args&&... __args)
-        :
-        callable_function(__f),
-        callable_function_args(__args...)
+        : callable_function(__f)
+        , callable_function_args(__args...)
     {
         tick.store(std::chrono::milliseconds(new_tick));
 #ifdef DEBUG
         std::cout << "timer func: " << (int*)__f << "\n";
-        expand_type{ 0, (std::cout << __args << "\n", 0)... };
+        expand_type { 0, (std::cout << __args << "\n", 0)... };
 #endif
     }
 

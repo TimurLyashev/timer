@@ -13,7 +13,7 @@ int main()
     int counter = 0;
     int timer_tick = 100;
     std::cout << "programm func: " << (int*)test_message_counter << "\n";
-    Timer<void(int&),int&> test_timer(timer_tick, test_message_counter, counter);
+    Timer<void(int&), int&> test_timer(timer_tick, test_message_counter, counter);
 
     test_timer.create();
     test_timer.start();
