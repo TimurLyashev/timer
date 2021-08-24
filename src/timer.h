@@ -23,21 +23,17 @@ class Timer {
     std::function<Callable> callable_function;
     std::tuple<Args...> callable_function_args;
 
-    std::atomic_flag start_flag = ATOMIC_FLAG_INIT;
-    std::atomic_flag stop_flag = ATOMIC_FLAG_INIT;
+    std::atomic<bool> start_flag = ATOMIC_VAR_INIT(false);
+    std::atomic<bool> stop_flag = ATOMIC_VAR_INIT(false);
 
     void loop()
     {
-        while (!start_flag.test_and_set(std::memory_order_acquire)) {
-            start_flag.clear(std::memory_order_release);
+        while (!start_flag.load()) {
         }
 
-        start_flag.test_and_set(std::memory_order_acquire);
-
-        while (!stop_flag.test_and_set(std::memory_order_acquire)) {
+        while (!stop_flag.load()) {
             std::apply(callable_function, callable_function_args);
             std::this_thread::sleep_for(tick);
-            stop_flag.clear(std::memory_order_release);
         }
     }
 
@@ -61,12 +57,12 @@ public:
 
     void start()
     {
-        start_flag.test_and_set(std::memory_order_acquire);
+        start_flag.store(true);
     }
 
     void stop()
     {
-        stop_flag.test_and_set(std::memory_order_acquire);
+        stop_flag.store(true);
     }
 
 };
