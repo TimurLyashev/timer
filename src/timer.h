@@ -3,9 +3,10 @@
 
 #include <atomic>
 #include <functional>
+#include <condition_variable>
 #include <thread>
 
-#ifdef DEBUG
+#ifndef NDEBUG // NDEBUG is cmake-specific variable with not-debug logic parameter
 #include <iostream>
 
 struct expand_type {
@@ -23,13 +24,15 @@ class Timer {
     std::function<Callable> callable_function;
     std::tuple<Args...> callable_function_args;
 
-    std::atomic<bool> start_flag = ATOMIC_VAR_INIT(false);
     std::atomic<bool> stop_flag = ATOMIC_VAR_INIT(false);
+
+    std::condition_variable start_cv;
+    std::mutex start_mutex;
 
     void loop()
     {
-        while (!start_flag.load()) {
-        }
+        std::unique_lock<std::mutex> start_locker(start_mutex);
+        start_cv.wait(start_locker);
 
         while (!stop_flag.load()) {
             std::apply(callable_function, callable_function_args);
@@ -38,14 +41,14 @@ class Timer {
     }
 
 public:
-    explicit Timer(int new_tick, Callable&& __f, Args&&... __args)
-        : callable_function(__f)
-        , callable_function_args(__args...)
-        , tick(new_tick)
+    explicit Timer(int new_tick, Callable&& function, Args&&... args)
+        : tick(std::move(new_tick))
+        , callable_function(function)
+        , callable_function_args(args...)
     {
-#ifdef DEBUG
-        std::cout << "timer func: " << (int*)__f << "\n";
-        expand_type { 0, (std::cout << __args << "\n", 0)... };
+#ifndef NDEBUG // NDEBUG is cmake-specific variable with not-debug logic parameter
+        std::cout << "timer func: " << (int*)function << "\n";
+        expand_type { 0, (std::cout << args << "\n", 0)... };
 #endif
     }
 
@@ -57,7 +60,10 @@ public:
 
     void start()
     {
-        start_flag.store(true);
+        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+        std::unique_lock<std::mutex> start_locker(start_mutex);
+        start_locker.unlock();
+        start_cv.notify_one();
     }
 
     void stop()

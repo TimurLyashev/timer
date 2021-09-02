@@ -2,6 +2,8 @@
 
 #include <iostream>
 
+#include <thread>
+
 void test_message_counter(int& counter)
 {
     counter++;
@@ -18,6 +20,7 @@ int main()
     Timer<void(int&), int&> test_timer(timer_tick, test_message_counter, counter);
 
     test_timer.create();
+
     test_timer.start();
 
     std::this_thread::sleep_for(std::chrono::seconds(pause));
